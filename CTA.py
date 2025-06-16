@@ -25,6 +25,7 @@ class main:
                   text="PC -> Soporte", 
                   command=lambda: window_Backup(self.main_window, self.create_main_window)
                   ).grid(row=1, column=0, padx=10, pady=10)
+        
         tk.Button(self.main_window, 
                   text="Soporte -> PC", 
                   command=lambda: window_Restoration(self.main_window, self.create_main_window)

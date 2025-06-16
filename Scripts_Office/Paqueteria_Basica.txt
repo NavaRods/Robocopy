@@ -1,0 +1,43 @@
+@echo off
+setlocal enabledelayedexpansion
+
+echo --------------------------------------------
+echo Instalador Automático de Paquetería Básica
+echo --------------------------------------------
+
+:: Obtener la letra de la unidad actual (donde está este script)
+set "usb_drive=%~d0"
+echo Ejecutando desde: %usb_drive%
+
+:: Definir rutas relativas o absolutas de los instaladores (AJUSTA AQUÍ)
+:: Sintaxis: set ruta_instaladorN=carpeta\archivo
+set ruta_instalador1="AcroRdrDC2300320269_es_ES (win11).exe"
+:: set ruta_instalador2=instaladores\drivers\instalador2.bat
+:: set ruta_instalador3=utilidades\instalador3.exe
+
+:: Lista de variables a ejecutar
+set lista=ruta_instalador1
+
+:: Bucle para ejecutar instaladores
+for %%I in (%lista%) do (
+    call set "archivo=%%%I%%"
+    set "ruta_completa=%usb_drive%\!archivo!"
+    if exist "!ruta_completa!" (
+        echo ----------------------------------------
+        echo Ejecutando !archivo!...
+
+        if /I "!ruta_completa:~-4!"==".exe" (
+            powershell -Command "Start-Process '!ruta_completa!' -Verb runAs"
+        ) else (
+            call "!ruta_completa!"
+        )
+        timeout /t 5 > nul
+    ) else (
+        echo Instalador no encontrado: !ruta_completa!
+    )
+)
+
+echo --------------------------------------------
+echo Instalación finalizada. Presiona una tecla...
+pause > nul
+exit
