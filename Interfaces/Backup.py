@@ -4,6 +4,7 @@ import os
 import sys
 import psutil
 from dataclasses import dataclass
+from robocopy import Backup
 
 try:
     import wmi
@@ -35,6 +36,8 @@ class window_Backup:
                  text="Respaldo", 
                  font=("Arial", 20, "bold")
                  ).grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+        
+        self.bO = 0
         
         tk.Button(self.main_window,
                   text="Seleccionar unidad",
@@ -119,52 +122,68 @@ class window_Backup:
         return selected_path
 
     def iniciar_seleccion(self):
-        print("Abriendo explorador de archivos para seleccionar una carpeta...")
         
+        print("Abriendo explorador de archivos para seleccionar una carpeta...")
+        if self.bO == 0: self.dicc_Origen = None
+        self.dicc_Dest = None
+        
+        # Asignar como variable de clase
         self.path_seleccionado = self.seleccionar_ruta_con_explorador()
+        
 
         if self.path_seleccionado:
+            self.bO += 1
+            banOrigin = True
             print(f"DEBUG: Ruta seleccionada por filedialog: '{self.path_seleccionado}'")
-            info_unidad = self.obtener_info_unidad_por_ruta(self.path_seleccionado)
+            try:
+                info_unidad = self.obtener_info_unidad_por_ruta(self.path_seleccionado)
 
-            if info_unidad:
-                mountpoint = info_unidad["mountpoint"]
-                volume_name = info_unidad["volume_name"]
-                
-                display_info = ""
-                if sys.platform == "win32":
-                    # Usar os.path.splitdrive para obtener la letra del disco de forma más robusta
-                    drive_letter_part = os.path.splitdrive(mountpoint)[0]
-                    if volume_name:
-                        display_info = f"**{drive_letter_part}\\ ({volume_name})**"
+                if info_unidad:
+                    self.mountpoint = info_unidad["mountpoint"] # El punto de montaje
+                    self.volume_name = info_unidad["volume_name"] # El nombre del volumen
+                    
+                    display_info = ""
+                    if sys.platform == "win32":
+                        # Usar os.path.splitdrive para obtener la letra del disco de forma más robusta
+                        drive_letter_part = os.path.splitdrive(self.mountpoint)[0]
+                        if self.volume_name:
+                            display_info = f"**{drive_letter_part}\\ ({self.volume_name})**"
+                        else:
+                            display_info = f"**{drive_letter_part}\\ [Sin Nombre]**"
                     else:
-                        display_info = f"**{drive_letter_part}\\ [Sin Nombre]**"
-                else:
-                    if volume_name:
-                        display_info = f"**{mountpoint} ({volume_name})**"
-                    else:
-                        display_info = f"**{mountpoint}**"
+                        if volume_name:
+                            display_info = f"**{mountpoint} ({volume_name})**"
+                        else:
+                            display_info = f"**{mountpoint}**"
+                    
                 
-                messagebox.showinfo(
-                    "Unidad de Almacenamiento Seleccionada",
-                    f"Has seleccionado la ruta:\n'{self.path_seleccionado}'\n\n"
-                    f"La **Unidad de Almacenamiento** es:\n{display_info}"
-                )
-                print(f"Ruta seleccionada: {self.path_seleccionado}")
-                print(f"Unidad de Almacenamiento: {display_info}")
+                    print(f"Ruta seleccionada: {self.path_seleccionado}")
+                    print(f"Unidad de Almacenamiento: {display_info}")
 
-                if (volume_name and "soporte" in volume_name.lower()) or \
-                   ("soporte" in mountpoint.lower()):
-                    messagebox.showinfo("Unidad 'SOPORTE'", "¡Has seleccionado una unidad relacionada con 'SOPORTE'!")
-
-            else:
-                # Modificado para imprimir la salida específica solicitada
+            except:
                 print(f"No se pudo determinar la unidad para la ruta: {self.path_seleccionado}")
-                messagebox.showwarning("Información de Unidad", 
-                                       f"No se pudo determinar la unidad de almacenamiento para la ruta seleccionada:\n'{self.path_seleccionado}'")
+                tk.messagebox.showwarning("No se pudo determinar la unidad", f"No se pudo determinar la unidad para la ruta: {self.path_seleccionado}")
+                
+                        
+
+            if banOrigin and self.path_seleccionado != self.dicc_Origen and self.bO == 1:
+                self.dicc_Origen = rf"{self.path_seleccionado}"
+                tk.Label(self.main_window, text=self.path_seleccionado).grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+                tk.Button(self.main_window, text="Seleccionar otra unidad", command=self.iniciar_seleccion).grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+            else:
+                self.dicc_Dest = rf"{self.path_seleccionado}"
+                tk.Label(self.main_window, text=self.path_seleccionado).grid(row=6, column=0, columnspan=2, padx=10, pady=10)
+                self.procesar()
+
+
         else:
             messagebox.showwarning("Selección Cancelada", "No se seleccionó ninguna carpeta.")
             print("Selección cancelada.")
+
+    def procesar(self):
+        
+        Backup(self.dicc_Origen, self.dicc_Dest)
+        
 
     def return_to_main(self):
         self.cleanWindow()

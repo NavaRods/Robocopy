@@ -1,46 +1,16 @@
-import tkinter as tk
-from tkinter import *
+import subprocess
 import os
 
-idReport = 666
+def Backup(Origin, Destination):
+    Origin = os.path.normpath(Origin)
+    Destination = os.path.normpath(Destination)
 
-def robocopy():
-    root = tk.Tk()
-    root.title("Robocopy")
-    root.geometry("300x300")
+    command = ['robocopy', Origin, Destination, '/E', '/R:3', '/W:0']
 
-    Button(root, text="PC -> Soporte", command=lambda: window_Backup()).grid(row=0, column=0)
-    Button(root, text="Soporte -> PC").grid(row=0, column=1)
-
-
-
-    pathUser = tk.Entry(PC)
-    selectDisk = tk.Entry(Soporte)
-
-    root.mainloop()
+    print("Ejecutando comando:", " ".join(command))
     
-
-robocopy()
-
-def window_Backup():
-    backup = tk.Tk()
-    backup.title("PC -> Soporte")
-    backup.geometry("300x300")
-
-    backup.mainloop()
-
-def window_Restoration():
-    rest = tk.Tk()
-    rest.title("PC ->")
-
-def Backup(pathUser, selectDisk):
-    os.system('robocopy \"c:\Users' + f'\\{pathUser}' + '\\Desktop\"' + f'{selectDisk}'+':\\Respaldo-'+ f'\\{idReport}' + f'\\{pathUser}' + '\\Desktop\"' + '/E /R:3 /W:0')
-    os.system('robocopy \"c:\Users' + f'\\{pathUser}' + '\\Documents\"' + f'{selectDisk}'+':\\Respaldo-'+ f'\\{idReport}' + f'\\{pathUser}' + '\\Documents\"' + '/E /R:3 /W:0')
-    os.system('robocopy \"c:\Users' + f'\\{pathUser}' + '\\Download\"' + f'{selectDisk}'+':\\Respaldo-'+ f'\\{idReport}' + f'\\{pathUser}' + '\\Download\"' + '/E /R:3 /W:0')
-
-def Restoration(pathUser, selectDisk):
-    os.system('robocopy' + f'{selectDisk}'+':\\Respaldo-'+ f'\\{idReport}' + f'\\{pathUser}' + '\\Download\"' + '\"c:\Users' + f'\\{pathUser}' + '\\Download\"' + '/E /R:3 /W:0')
-    os.system('robocopy' + f'{selectDisk}'+':\\Respaldo-' + f'\\{idReport}' + f'\\{pathUser}' + '\\Download\"' + '\"c:\Users' + f'\\{pathUser}' + '\\Download\"' + '/E /R:3 /W:0')
-    os.system('robocopy' + f'{selectDisk}'+':\\Respaldo-'+ f'\\{idReport}' + f'\\{pathUser}' + '\\Download\"' + '\"c:\Users' + f'\\{pathUser}' + '\\Download\"' + '/E /R:3 /W:0')
-    
-
+    result = subprocess.run(command, capture_output=True, text=True)
+    print("SALIDA:")
+    print(result.stdout)
+    print("ERRORES:")
+    print(result.stderr)
